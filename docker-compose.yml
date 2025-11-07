@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  parkfind:
+    build: .
+    container_name: parkfind-app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/app/data
+      - ./parking.db:/app/parking.db
+    environment:
+      - FLASK_APP=main_sqlite.py
+      - FLASK_ENV=production
+    restart: unless-stopped
+    networks:
+      - parkfind-network
+
+networks:
+  parkfind-network:
+    driver: bridge

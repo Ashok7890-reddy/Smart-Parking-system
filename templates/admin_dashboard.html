@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkFind | Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 1.8rem; }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .admin-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .logout-btn {
+            padding: 0.5rem 1.5rem;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .logout-btn:hover { background: #c0392b; }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        .panel {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .panel-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1.5rem;
+            font-size: 1.3rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .panel-body {
+            padding: 1.5rem;
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+        
+        /* Reservations Table */
+        .reservations-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .reservations-table th,
+        .reservations-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .reservations-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+            position: sticky;
+            top: 0;
+        }
+        .reservations-table tr:hover { background: #f8f9fa; }
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        .status-booked {
+            background: #d4edda;
+            color: #155724;
+        }
+        .slot-badge {
+            background: #667eea;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: #999;
+        }
+        .no-data i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        /* Camera Section */
+        .recognition-container { text-align: center; }
+        .camera-view {
+            background: #000;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            min-height: 300px;
+        }
+        #video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        #canvas {
+            display: none;
+        }
+        .camera-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            justify-content: center;
+        }
+        .control-btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .start-camera-btn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .start-camera-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+        }
+        .capture-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .capture-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .stop-camera-btn {
+            background: #e74c3c;
+            color: white;
+        }
+        .stop-camera-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+        .control-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+            text-align: left;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            text-align: center;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #1e3c72;
+        }
+        .verify-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .verify-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(17, 153, 142, 0.4);
+        }
+        .verify-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result-box {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 10px;
+            display: none;
+        }
+        .result-box.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .result-authorized {
+            background: #d4edda;
+            border: 2px solid #28a745;
+        }
+        .result-unauthorized {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+        }
+        .result-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .result-authorized .result-icon { color: #28a745; }
+        .result-unauthorized .result-icon { color: #dc3545; }
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .result-authorized .result-title { color: #155724; }
+        .result-unauthorized .result-title { color: #721c24; }
+        .result-details {
+            margin-top: 1rem;
+            text-align: left;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        .result-details p {
+            margin: 0.5rem 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .result-details strong { color: #333; }
+        .ocr-status {
+            background: #e3f2fd;
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #1565c0;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-shield-alt"></i> Admin Dashboard</h1>
+        <div class="header-right">
+            <div class="admin-badge">
+                <i class="fas fa-user-shield"></i>
+                <span>Administrator</span>
+            </div>
+            <a href="{{ url_for('admin_logout') }}" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Left Panel: Reserved Details -->
+        <div class="panel">
+            <div class="panel-header">
+                <i class="fas fa-list-alt"></i> Active Reservations
+            </div>
+            <div class="panel-body">
+                {% if reservations %}
+                <table class="reservations-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Vehicle</th>
+                            <th>Plate Number</th>
+                            <th>Slot</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for res in reservations %}
+                        <tr>
+                            <td><strong>{{ res.username }}</strong></td>
+                            <td>{{ res.car_mark }}</td>
+                            <td><strong style="color: #1e3c72;">{{ res.car_number }}</strong></td>
+                            <td><span class="slot-badge">{{ res.slot }}</span></td>
+                            <td><small>{{ res.timestamp }}</small></td>
+                            <td><span class="status-badge status-booked">{{ res.status }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="no-data">
+                    <i class="fas fa-inbox"></i>
+                    <p>No active reservations</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Panel: Number Plate Recognition -->
+        <div class="panel">
+            <div class="panel-header">
+                <i class="fas fa-camera"></i> Live Number Plate Recognition
+            </div>
+            <div class="panel-body">
+                <div class="recognition-container">
+                    <div class="camera-view">
+                        <video id="video" autoplay playsinline></video>
+                        <canvas id="canvas"></canvas>
+                    </div>
+
+                    <div class="camera-controls">
+                        <button class="control-btn start-camera-btn" id="startCamera" onclick="startCamera()">
+                            <i class="fas fa-video"></i> Start Camera
+                        </button>
+                        <button class="control-btn capture-btn" id="captureBtn" onclick="captureAndRecognize()" disabled>
+                            <i class="fas fa-camera"></i> Capture & Scan
+                        </button>
+                        <button class="control-btn stop-camera-btn" id="stopCamera" onclick="stopCamera()" disabled>
+                            <i class="fas fa-stop"></i> Stop Camera
+                        </button>
+                    </div>
+
+                    <div id="ocrStatus" class="ocr-status" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i> <span id="ocrText">Processing...</span>
+                    </div>
+
+                    <div class="input-group">
+                        <label><i class="fas fa-id-card"></i> Detected / Manual Plate Number</label>
+                        <input type="text" id="plateInput" placeholder="e.g., ABC-1234" maxlength="20">
+                    </div>
+
+                    <button class="verify-btn" onclick="verifyPlate()">
+                        <i class="fas fa-check-circle"></i> Verify Vehicle
+                    </button>
+
+                    <div id="resultBox" class="result-box">
+                        <div class="result-icon">
+                            <i id="resultIcon"></i>
+                        </div>
+                        <div class="result-title" id="resultTitle"></div>
+                        <div id="resultMessage"></div>
+                        <div id="resultDetails" class="result-details"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let stream = null;
+        let worker = null;
+
+        // Initialize Tesseract worker
+        async function initOCR() {
+            if (!worker) {
+                worker = await Tesseract.createWorker('eng');
+                await worker.setParameters({
+                    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-',
+                });
+            }
+        }
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                
+                document.getElementById('startCamera').disabled = true;
+                document.getElementById('captureBtn').disabled = false;
+                document.getElementById('stopCamera').disabled = false;
+                
+                // Initialize OCR worker
+                await initOCR();
+                
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                alert('Unable to access camera. Please ensure camera permissions are granted.');
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                
+                const video = document.getElementById('video');
+                video.srcObject = null;
+                
+                document.getElementById('startCamera').disabled = false;
+                document.getElementById('captureBtn').disabled = true;
+                document.getElementById('stopCamera').disabled = true;
+            }
+        }
+
+        async function captureAndRecognize() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            
+            // Set canvas size to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Draw video frame to canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Show OCR status
+            const ocrStatus = document.getElementById('ocrStatus');
+            const ocrText = document.getElementById('ocrText');
+            ocrStatus.style.display = 'block';
+            ocrText.textContent = 'Scanning plate number...';
+            
+            document.getElementById('captureBtn').disabled = true;
+            
+            try {
+                // Perform OCR on the captured image
+                const { data: { text } } = await worker.recognize(canvas);
+                
+                // Extract plate number (remove spaces and special chars except hyphen)
+                let plateNumber = text.replace(/[^A-Z0-9-]/g, '').trim();
+                
+                // Try to find a valid plate pattern
+                const platePattern = /[A-Z]{2,3}[-]?\d{3,4}[A-Z]?\d?/;
+                const match = plateNumber.match(platePattern);
+                
+                if (match) {
+                    plateNumber = match[0];
+                }
+                
+                ocrText.textContent = 'Plate detected: ' + (plateNumber || 'None');
+                
+                // Fill the input field
+                document.getElementById('plateInput').value = plateNumber;
+                
+                // Auto-verify if plate number detected
+                if (plateNumber && plateNumber.length >= 4) {
+                    setTimeout(() => {
+                        verifyPlate();
+                    }, 1000);
+                } else {
+                    ocrText.textContent = 'No valid plate detected. Please enter manually.';
+                }
+                
+            } catch (error) {
+                console.error('OCR Error:', error);
+                ocrText.textContent = 'Error scanning. Please enter manually.';
+            } finally {
+                document.getElementById('captureBtn').disabled = false;
+                setTimeout(() => {
+                    ocrStatus.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        async function verifyPlate() {
+            const plateInput = document.getElementById('plateInput');
+            const plateNumber = plateInput.value.trim().toUpperCase();
+            const resultBox = document.getElementById('resultBox');
+            const resultIcon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultMessage = document.getElementById('resultMessage');
+            const resultDetails = document.getElementById('resultDetails');
+
+            if (!plateNumber) {
+                alert('Please enter a plate number or capture from camera');
+                return;
+            }
+
+            const verifyBtn = document.querySelector('.verify-btn');
+            verifyBtn.disabled = true;
+            verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+
+            try {
+                const response = await fetch('/admin/verify_plate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plate_number: plateNumber })
+                });
+
+                const data = await response.json();
+
+                verifyBtn.disabled = false;
+                verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Verify Vehicle';
+
+                resultBox.classList.remove('result-authorized', 'result-unauthorized');
+                resultBox.classList.add('show');
+
+                if (data.authorized) {
+                    resultBox.classList.add('result-authorized');
+                    resultIcon.className = 'fas fa-check-circle';
+                    resultTitle.textContent = 'AUTHORIZED ✓';
+                    resultMessage.innerHTML = '<p style="color: #155724;">Vehicle is registered and authorized to enter</p>';
+                    
+                    resultDetails.innerHTML = `
+                        <p><strong>Owner:</strong> <span>${data.details.username}</span></p>
+                        <p><strong>Vehicle:</strong> <span>${data.details.car_mark}</span></p>
+                        <p><strong>Plate:</strong> <span>${data.details.car_number}</span></p>
+                        <p><strong>Slot:</strong> <span>${data.details.slot}</span></p>
+                        <p><strong>Reserved:</strong> <span>${data.details.timestamp}</span></p>
+                    `;
+                    
+                    // Play success sound
+                    playBeep(800, 200);
+                } else {
+                    resultBox.classList.add('result-unauthorized');
+                    resultIcon.className = 'fas fa-times-circle';
+                    resultTitle.textContent = 'UNAUTHORIZED ✗';
+                    resultMessage.innerHTML = '<p style="color: #721c24;">Vehicle not found in reservation system</p>';
+                    resultDetails.innerHTML = '<p style="text-align: center; color: #721c24;"><strong>Access Denied</strong></p>';
+                    
+                    // Play error sound
+                    playBeep(400, 500);
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                verifyBtn.disabled = false;
+                verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Verify Vehicle';
+                alert('Error verifying plate number. Please try again.');
+            }
+        }
+
+        function playBeep(frequency, duration) {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration / 1000);
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+
+        // Allow Enter key to verify
+        document.getElementById('plateInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verifyPlate();
+            }
+        });
+
+        // Auto-refresh reservations every 30 seconds
+        setInterval(function() {
+            location.reload();
+        }, 30000);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            stopCamera();
+            if (worker) {
+                worker.terminate();
+            }
+        });
+    </script>
+</body>
+</html>

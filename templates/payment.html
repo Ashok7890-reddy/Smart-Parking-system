@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkFind | Payment</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+            text-align: center;
+            color: white;
+        }
+        .card-header i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        .card-header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .card-body {
+            padding: 2rem;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            color: #666;
+            font-weight: 500;
+        }
+        .info-value {
+            color: #333;
+            font-weight: bold;
+        }
+        .total-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+        .total-section p {
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        .total-amount {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .btn {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(17, 153, 142, 0.4);
+        }
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #d0d0d0;
+            transform: translateY(-2px);
+        }
+        .parking-icon {
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+        .parking-icon i {
+            font-size: 3rem;
+        }
+        @media (max-width: 768px) {
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <div class="parking-icon">
+                    <i class="fas fa-parking"></i>
+                </div>
+                <h1>Parking Payment</h1>
+                <p>Complete your parking session</p>
+            </div>
+
+            <div class="card-body">
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="fas fa-parking"></i> Parking Slot
+                    </span>
+                    <span class="info-value">Slot {{ slot }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="fas fa-clock"></i> Start Time
+                    </span>
+                    <span class="info-value">{{ start_time }}</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="fas fa-hourglass-half"></i> Duration
+                    </span>
+                    <span class="info-value">{{ hours_parked }} hour(s)</span>
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="fas fa-rupee-sign"></i> Rate per Hour
+                    </span>
+                    <span class="info-value">₹20</span>
+                </div>
+
+                <div class="total-section">
+                    <p>Total Amount</p>
+                    <div class="total-amount">₹{{ total_price }}</div>
+                </div>
+
+                <form action="{{ url_for('process_payment') }}" method="post">
+                    <input type="hidden" name="slot" value="{{ slot }}">
+                    <input type="hidden" name="total_price" value="{{ total_price }}">
+                    
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-credit-card"></i> Proceed to Payment
+                        </button>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParkFind | Reserve Parking</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            background: white;
+            padding: 1.5rem 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            color: #667eea;
+            font-size: 2rem;
+            text-decoration: none;
+        }
+        .header h1 a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .back-btn {
+            padding: 0.5rem 1.5rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+        .back-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        .alert {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        .card h2 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .cost-display {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        .cost-display p {
+            font-size: 1.2rem;
+            color: #333;
+        }
+        .cost-display span {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(17, 153, 142, 0.4);
+        }
+        .reservations-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .reservations-table th,
+        .reservations-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .reservations-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        .pay-btn {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+        .pay-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+        .no-reservations {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        @media (max-width: 968px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><a href="{{ url_for('dashboard') }}"><i class="fas fa-parking"></i> ParkFind</a></h1>
+            <a href="{{ url_for('dashboard') }}" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }}"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="content-grid">
+            <div class="card">
+                <h2><i class="fas fa-calendar-plus"></i> Reserve a Parking Spot</h2>
+                <form id="reservationForm" method="post" action="{{ url_for('submit_reservation') }}">
+                    <div class="form-group">
+                        <label><i class="fas fa-car"></i> Car Make</label>
+                        <input type="text" name="carMake" placeholder="e.g., Toyota, Honda" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-id-card"></i> Car Registration Number</label>
+                        <input type="text" name="carNumber" placeholder="e.g., ABC-1234" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-parking"></i> Select Parking Slot</label>
+                        <select name="slot" required>
+                            {% if empty_slots %}
+                                {% for slot in empty_slots %}
+                                    <option value="{{ slot }}">Slot {{ slot }}</option>
+                                {% endfor %}
+                            {% else %}
+                                <option value="" disabled>No slots available</option>
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-clock"></i> Time of Parking</label>
+                        <select id="parkingTime" name="parkingTime" required></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-calendar"></i> Date of Parking</label>
+                        <input type="date" id="parkingDate" name="parkingDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-hourglass-half"></i> Number of Hours</label>
+                        <input type="number" id="hours" name="hours" min="1" placeholder="Enter hours" required>
+                    </div>
+
+                    <div class="cost-display">
+                        <p>Total Cost</p>
+                        <span>₹<span id="totalCost">0</span></span>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-check-circle"></i> Reserve Slot
+                    </button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2><i class="fas fa-list"></i> Your Reservations</h2>
+                {% set user_reservations = reservations | selectattr('username', 'equalto', username) | list %}
+                {% if user_reservations %}
+                    <table class="reservations-table">
+                        <thead>
+                            <tr>
+                                <th>Car</th>
+                                <th>Slot</th>
+                                <th>Time</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for res in user_reservations %}
+                            <tr>
+                                <td>
+                                    <strong>{{ res.carMark }}</strong><br>
+                                    <small>{{ res.carNumber }}</small>
+                                </td>
+                                <td><strong>Slot {{ res.slot }}</strong></td>
+                                <td><small>{{ res.timestamp }}</small></td>
+                                <td>
+                                    <a href="{{ url_for('payment') }}?slot={{ res.slot }}" class="pay-btn">
+                                        <i class="fas fa-credit-card"></i> Pay
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="no-reservations">
+                        <i class="fas fa-inbox" style="font-size: 3rem; color: #ccc; margin-bottom: 1rem;"></i>
+                        <p>You have no active reservations</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let today = new Date();
+            let maxDate = new Date();
+            maxDate.setDate(today.getDate() + 20);
+
+            let todayStr = today.toISOString().split("T")[0];
+            let maxDateStr = maxDate.toISOString().split("T")[0];
+
+            document.getElementById('parkingDate').setAttribute('min', todayStr);
+            document.getElementById('parkingDate').setAttribute('max', maxDateStr);
+
+            let timeDropdown = document.getElementById('parkingTime');
+            for (let h = 0; h < 24; h++) {
+                for (let m = 0; m < 60; m += 30) {
+                    let hour = h % 12 === 0 ? 12 : h % 12;
+                    let minute = m < 10 ? "0" + m : m;
+                    let period = h < 12 ? "AM" : "PM";
+                    let timeValue = `${hour}:${minute} ${period}`;
+                    let option = document.createElement("option");
+                    option.value = timeValue;
+                    option.textContent = timeValue;
+                    timeDropdown.appendChild(option);
+                }
+            }
+
+            document.getElementById('hours').addEventListener('input', function () {
+                let ratePerHour = 20;
+                let hours = parseInt(this.value) || 0;
+                document.getElementById('totalCost').textContent = hours * ratePerHour;
+            });
+        });
+    </script>
+</body>
+</html>
