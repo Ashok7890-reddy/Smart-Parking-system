@@ -12,8 +12,14 @@ app.secret_key = 'canada$God7972#'
 # Define total parking slots
 TOTAL_SLOTS = 10
 
-# Database file path
-DB_PATH = os.path.join(os.path.dirname(__file__), 'parking.db')
+# Database file path - support both local and cloud deployment
+# Check if running on Render.com with persistent disk
+if os.path.exists('/app/data'):
+    DB_PATH = '/app/data/parking.db'
+    print("📁 Using persistent storage: /app/data/parking.db")
+else:
+    DB_PATH = os.path.join(os.path.dirname(__file__), 'parking.db')
+    print(f"📁 Using local storage: {DB_PATH}")
 
 # Initialize database
 def init_db():
@@ -414,14 +420,17 @@ if __name__ == '__main__':
     print("🚗 Smart Parking System - SQLite Version")
     print("=" * 60)
     print("✅ Database initialized successfully!")
-    print("🌐 Server starting at: http://0.0.0.0:5000")
-    print("📝 To register: http://localhost:5000/register")
-    print("🔐 To login: http://localhost:5000/login")
-    print("👨‍💼 Admin login: http://localhost:5000/admin/login")
+    
+    # Get port from environment variable (for cloud deployment) or use 5000
+    port = int(os.environ.get('PORT', 5000))
+    
+    print(f"🌐 Server starting at: http://0.0.0.0:{port}")
+    print(f"📝 To register: http://localhost:{port}/register")
+    print(f"🔐 To login: http://localhost:{port}/login")
+    print(f"👨‍💼 Admin login: http://localhost:{port}/admin/login")
     print("=" * 60)
     
     # Get debug mode from environment or default to False for production
-    import os
     debug_mode = os.environ.get('FLASK_ENV') == 'development'
     
-    app.run(host='0.0.0.0', port=5000, debug=debug_mode)
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)

@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: parkfind-smart-parking
+    env: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main_sqlite.py
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PORT
+        value: 5000
+    disk:
+      name: parking-data
+      mountPath: /app/data
+      sizeGB: 1
